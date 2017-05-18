@@ -1,0 +1,11 @@
+[package]
+name = "better-than-basic"
+version = "0.1.0"
+authors = ["James Sanderson <zofrex@gmail.com>"]
+
+[dependencies]
+iron = "*"
+router = "*"
+handlebars-iron = "*"
+params = "*"
+persistent = "*"

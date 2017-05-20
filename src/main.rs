@@ -65,17 +65,6 @@ fn check_auth(request: &mut Request) -> IronResult<Response> {
 
 fn login_page(request: &mut Request) -> IronResult<Response> {
     let mut data = BTreeMap::new();
-
-    if let Some(&ref cookie_header) = request.headers.get::<iron::headers::Cookie>() {
-        match cookie_header.iter()
-            .filter_map(|cookie| Cookie::parse(cookie.clone()).ok())
-            .find(|cookie| cookie.name() == "session-id") {
-            Some(ref session_cookie) => {
-                data.insert(String::from("session"), session_cookie.value().to_string());
-            }
-            None => (),
-        }
-    }
     let params = request.get_ref::<Params>().unwrap();
     let error = params.find(&["error"]);
     let error = non_empty_string(error);

@@ -4,6 +4,7 @@ extern crate handlebars_iron;
 extern crate params;
 extern crate persistent;
 extern crate cookie;
+extern crate hyperlocal;
 
 use iron::Iron;
 use iron::Request;
@@ -38,6 +39,7 @@ use std::collections::BTreeMap;
 use cookie::Cookie;
 
 use sessions::Sessions;
+use hyperlocal::UnixSocketListener;
 
 fn check_auth(request: &mut Request) -> IronResult<Response> {
     let sessions_mutex = request.get::<Write<Sessions>>().unwrap();
@@ -130,6 +132,7 @@ fn process_login(request: &mut Request) -> IronResult<Response> {
 }
 
 fn main() {
+    let listener = UnixSocketListener::new("/tmp/socket").unwrap();
     let users = Users::hardcoded();
     let sessions = Sessions::new().unwrap();
 
@@ -151,5 +154,5 @@ fn main() {
     chain.link_before(Write::<Sessions>::one(sessions));
     chain.link_after(hbse);
 
-    Iron::new(chain).http("localhost:3000").unwrap();
+    Iron::new(chain).listen(listener, iron::Protocol::http()).unwrap();
 }

@@ -177,7 +177,7 @@ fn setup_listener(config: Config) -> Listener {
 fn main() {
     let config = Config::from_file("config.toml");
     let listener = setup_listener(config);
-    let users = Users::hardcoded();
+    let users = Users::from_file("users.toml");
     let sessions = Sessions::new().unwrap();
 
     let mut hbse = HandlebarsEngine::new();

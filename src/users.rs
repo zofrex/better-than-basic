@@ -1,5 +1,11 @@
 extern crate iron;
+extern crate toml;
 use iron::typemap::Key;
+
+use std::io::prelude::*;
+use std::fs::File;
+use std::path::Path;
+use self::toml::value::Value;
 
 struct User {
     username: String,
@@ -21,12 +27,19 @@ pub enum LoginResult {
 }
 
 impl Users {
-    pub fn hardcoded() -> Users {
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Users {
+        let mut file = File::open(path).unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
+        let users_table = contents.parse::<Value>().unwrap();
+        let users = users_table.as_table().unwrap().iter().map(|(username, password)| {
+            User {
+                username: username.clone(),
+                password: String::from(password.as_str().unwrap()),
+            }
+        }).collect::<Vec<User>>();
         Users {
-            users: vec![User {
-                            username: String::from("zoe"),
-                            password: String::from("password"),
-                        }],
+            users: users,
         }
     }
 

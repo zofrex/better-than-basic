@@ -6,6 +6,8 @@ extern crate persistent;
 extern crate cookie;
 extern crate hyperlocal;
 extern crate hyper;
+extern crate staticfile;
+extern crate mount;
 
 #[macro_use]
 extern crate serde_derive;
@@ -53,6 +55,9 @@ use iron::Protocol;
 
 use std::fs::Permissions;
 use std::os::unix::fs::PermissionsExt;
+
+use staticfile::Static;
+use mount::Mount;
 
 fn check_auth(request: &mut Request) -> IronResult<Response> {
     let sessions_mutex = request.get::<Write<Sessions>>().unwrap();
@@ -192,7 +197,11 @@ fn main() {
     router.post("/login", process_login, "login_submit");
     router.get("/check", check_auth, "check_endpoint");
 
-    let mut chain = Chain::new(router);
+    let mut mount = Mount::new();
+    mount.mount("/static/", Static::new("static"));
+    mount.mount("/", router);
+
+    let mut chain = Chain::new(mount);
 
     chain.link_before(Read::<Users>::one(users));
     chain.link_before(Write::<Sessions>::one(sessions));

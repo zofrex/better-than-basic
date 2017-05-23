@@ -1,7 +1,32 @@
-{{error}}
+<!doctype html>
 
-<form action="login" method="post">
-  <input type="text" name="username" placeholder="username">
-  <input type="password" name="password" placeholder="password">
-  <button type="submit">Login</button>
-</form>
+<html lang="en">
+<head>
+  <title>Login</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="static/base-min.css">
+  <link rel="stylesheet" href="static/buttons-min.css">
+  <link rel="stylesheet" href="static/forms-min.css">
+</head>
+
+<body>
+    {{error}}
+    <h1>Login</h1>
+    <p>You need to login to access this page:</p>
+    <form action="login" method="post" class="pure-form pure-form-aligned">
+        <div class="pure-control-group">
+            <label for="username">Username:</label>
+            <input id="username" type="text" name="username" placeholder="username">
+        </div>
+        <div class="pure-control-group">
+            <label for="password">Password:</label>
+            <input id="password" type="password" name="password" placeholder="password">
+        </div>
+        <div class="pure-controls">
+            <button type="submit" class="pure-button pure-button-primary">Login</button>
+        </div>
+    </form>
+</body>
+</html>

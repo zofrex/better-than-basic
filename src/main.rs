@@ -49,7 +49,6 @@ use cookie::Cookie;
 use sessions::Sessions;
 use hyperlocal::UnixSocketListener;
 use config::Config;
-use hyper::net::NetworkListener;
 use std::net::TcpListener;
 use hyper::net::HttpListener;
 use iron::Protocol;

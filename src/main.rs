@@ -8,6 +8,7 @@ extern crate hyperlocal;
 extern crate hyper;
 extern crate staticfile;
 extern crate mount;
+extern crate url;
 
 #[macro_use]
 extern crate serde_derive;
@@ -19,7 +20,7 @@ use iron::Response;
 use iron::Set;
 use iron::Chain;
 use iron::Plugin;
-use iron::modifiers::RedirectRaw;
+use iron::modifiers::Redirect;
 use iron::headers::SetCookie;
 use iron::modifiers::Header;
 
@@ -58,6 +59,9 @@ use std::os::unix::fs::PermissionsExt;
 
 use staticfile::Static;
 use mount::Mount;
+
+use iron::Url;
+use url::Url as RawUrl;
 
 fn check_auth(request: &mut Request) -> IronResult<Response> {
     let sessions_mutex = request.get::<Write<Sessions>>().unwrap();
@@ -98,8 +102,13 @@ fn login_page(request: &mut Request) -> IronResult<Response> {
     Ok(response)
 }
 
-fn redirect(path: &str) -> Response {
-    Response::with((iron::status::Found, RedirectRaw(String::from(path))))
+fn absolute_from_relative(base: &Url, path: &str) -> Url {
+    let base: RawUrl = base.clone().into();
+    Url::from_generic_url(base.join(path).unwrap()).unwrap()
+}
+
+fn redirect(context: &Request, path: &str) -> Response {
+    Response::with((iron::status::Found, Redirect(absolute_from_relative(&context.url, path))))
 }
 
 fn non_empty_string<'a>(value: Option<&'a Value>) -> Option<&'a String> {
@@ -121,17 +130,17 @@ fn process_login(request: &mut Request) -> IronResult<Response> {
 
     match (username, password) {
         (None, _) => {
-            return Ok(redirect("/?error=no_username"));
+            return Ok(redirect(request, "/?error=no_username"));
         }
         (Some(_), None) => {
-            return Ok(redirect("/?error=no_password"));
+            return Ok(redirect(request, "/?error=no_password"));
         }
         (Some(username), Some(password)) => {
             let users = arc.as_ref();
 
             match users.login(username, password) {
-                LoginResult::UserNotFound => return Ok(redirect("/?error=wrong_username")),
-                LoginResult::WrongPassword => return Ok(redirect("/?wrong_password")),
+                LoginResult::UserNotFound => return Ok(redirect(request, "/?error=wrong_username")),
+                LoginResult::WrongPassword => return Ok(redirect(request, "/?wrong_password")),
                 LoginResult::Correct => {
                     let sessions_mutex = request.get::<Write<Sessions>>().unwrap();
                     let session_id = sessions_mutex.lock().unwrap().create_session();
@@ -141,7 +150,7 @@ fn process_login(request: &mut Request) -> IronResult<Response> {
                         .finish()
                         .to_string();
                     return Ok(Response::with((iron::status::Found,
-                                              RedirectRaw(String::from("/?correct")),
+                                              Redirect(absolute_from_relative(&request.url, "/?correct")),
                                               Header(SetCookie(vec![cookie])))));
                 }
             }

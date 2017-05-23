@@ -14,7 +14,7 @@ impl Key for Sessions {
 
 pub struct Sessions {
     rng: OsRng,
-    sessions: LruCache<String, bool>,
+    sessions: LruCache<String, ()>,
 }
 
 impl Sessions {
@@ -27,7 +27,7 @@ impl Sessions {
 
     pub fn create_session(&mut self) -> String {
         let session_id = self.rng.gen_ascii_chars().take(50).collect::<String>();
-        self.sessions.insert(session_id.clone(), true);
+        self.sessions.insert(session_id.clone(), ());
         session_id
     }
 

@@ -1,0 +1,36 @@
+- hosts: all
+
+  become: yes
+
+  tasks:
+    - name: install Rust
+      shell: curl https://sh.rustup.rs -sSf | sh -s -- -y
+      args:
+        creates: /home/vagrant/.cargo/bin/rustc
+      become: no
+
+    - name: install nginx
+      package:
+        name: nginx
+        state: latest
+
+    - name: start nginx
+      service:
+        name: nginx
+        state: started
+
+    - name: copy nginx configuration
+      copy:
+        src: default-nginx.conf
+        dest: /etc/nginx/sites-available/default
+      notify:
+        - reload nginx
+
+    - name: add private nginx dir
+      copy:
+        src: private
+        dest: /var/www/html
+
+  handlers:
+    - name: reload nginx
+      service: name=nginx state=reloaded

@@ -1,6 +1,6 @@
 <!doctype html>
 
-<html lang="en">
+<html lang="{{i18n.locale}}">
 <head>
   <title>Login</title>
   <meta charset="utf-8">
@@ -13,19 +13,25 @@
 
 <body>
     {{error}}
-    <h1>Login</h1>
-    <p>You need to login to access this page:</p>
+    <h1>{{i18n.login_title}}</h1>
+    <p>{{i18n.login_subtitle}}</p>
     <form action="login" method="post" class="pure-form pure-form-aligned">
         <div class="pure-control-group">
-            <label for="username">Username:</label>
-            <input id="username" type="text" name="username" placeholder="username">
+            <label for="username">{{i18n.username_label}}</label>
+            <input id="username" type="text" name="username" placeholder="{{i18n.username_placeholder}}">
+            {{#if errors.username}}
+                <div class="pure-form-message-inline">{{errors.username}}</div>
+            {{/if}}
         </div>
         <div class="pure-control-group">
-            <label for="password">Password:</label>
-            <input id="password" type="password" name="password" placeholder="password">
+            <label for="password">{{i18n.password_label}}</label>
+            <input id="password" type="password" name="password" placeholder="{{i18n.password_placeholder}}">
+            {{#if errors.password}}
+                <div class="pure-form-message-inline">{{errors.password}}</div>
+            {{/if}}
         </div>
         <div class="pure-controls">
-            <button type="submit" class="pure-button pure-button-primary">Login</button>
+            <button type="submit" class="pure-button pure-button-primary">{{i18n.login_button}}</button>
         </div>
     </form>
 </body>

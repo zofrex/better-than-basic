@@ -38,11 +38,11 @@ use persistent::Write;
 mod users;
 mod sessions;
 mod config;
+mod i18n;
+mod errors;
 
 use users::Users;
 use users::LoginResult;
-
-use std::collections::BTreeMap;
 
 use cookie::Cookie;
 
@@ -61,6 +61,8 @@ use mount::Mount;
 
 use iron::Url;
 use url::Url as RawUrl;
+
+use errors::LoginError;
 
 fn check_auth(request: &mut Request) -> IronResult<Response> {
     let sessions_mutex = request.get::<Write<Sessions>>().unwrap();
@@ -87,14 +89,17 @@ fn check_auth(request: &mut Request) -> IronResult<Response> {
 }
 
 fn login_page(request: &mut Request) -> IronResult<Response> {
-    let mut data = BTreeMap::new();
     let params = request.get_ref::<Params>().unwrap();
     let error = params.find(&["error"]);
     let error = non_empty_string(error);
 
+    let mut errors: Vec<LoginError> = vec![];
     if let Some(error) = error {
-        data.insert(String::from("error"), error.to_string());
+        errors = LoginError::from_strings(vec![error]);
     }
+
+    let i18n = i18n::I18n::new("en");
+    let data = i18n.get_catalog(errors);
 
     let mut response = Response::new();
     response.set_mut(Template::new("login", data)).set_mut(iron::status::Ok);
@@ -117,6 +122,10 @@ fn non_empty_string<'a>(value: Option<&'a Value>) -> Option<&'a String> {
     }
 }
 
+fn redirect_with_errors(request: &mut Request, errors: Vec<LoginError>) -> IronResult<Response> {
+    Ok(redirect(request, &format!("/?{}", LoginError::to_query(errors))))
+}
+
 fn process_login(request: &mut Request) -> IronResult<Response> {
     let arc = request.get::<Read<Users>>().unwrap();
     let params = request.get::<Params>().unwrap();
@@ -128,18 +137,23 @@ fn process_login(request: &mut Request) -> IronResult<Response> {
     let password = non_empty_string(password);
 
     match (username, password) {
-        (None, _) => {
-            return Ok(redirect(request, "/?error=no_username"));
+        (None, None) => {
+            return redirect_with_errors(request,
+                                        vec![LoginError::UsernameMissing,
+                                             LoginError::PasswordMissing])
         }
-        (Some(_), None) => {
-            return Ok(redirect(request, "/?error=no_password"));
-        }
+        (None, _) => return redirect_with_errors(request, vec![LoginError::UsernameMissing]),
+        (Some(_), None) => return redirect_with_errors(request, vec![LoginError::PasswordMissing]),
         (Some(username), Some(password)) => {
             let users = arc.as_ref();
 
             match users.login(username, password) {
-                LoginResult::UserNotFound => return Ok(redirect(request, "/?error=wrong_username")),
-                LoginResult::WrongPassword => return Ok(redirect(request, "/?wrong_password")),
+                LoginResult::UserNotFound => {
+                    return redirect_with_errors(request, vec![LoginError::UsernameNotFound])
+                }
+                LoginResult::WrongPassword => {
+                    return redirect_with_errors(request, vec![LoginError::PasswordIncorrect])
+                }
                 LoginResult::Correct => {
                     let sessions_mutex = request.get::<Write<Sessions>>().unwrap();
                     let session_id = sessions_mutex.lock().unwrap().create_session();
@@ -149,7 +163,8 @@ fn process_login(request: &mut Request) -> IronResult<Response> {
                         .finish()
                         .to_string();
                     return Ok(Response::with((iron::status::Found,
-                                              Redirect(absolute_from_relative(&request.url, "/?correct")),
+                                              Redirect(absolute_from_relative(&request.url,
+                                                                              "/?correct")),
                                               Header(SetCookie(vec![cookie])))));
                 }
             }

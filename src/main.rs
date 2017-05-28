@@ -1,7 +1,7 @@
 extern crate iron;
 extern crate router;
 extern crate handlebars_iron;
-extern crate params;
+extern crate urlencoded;
 extern crate persistent;
 extern crate cookie;
 extern crate hyperlocal;
@@ -30,7 +30,7 @@ use handlebars_iron::HandlebarsEngine;
 use handlebars_iron::DirectorySource;
 use handlebars_iron::Template;
 
-use params::{Params, Value};
+use urlencoded::{UrlEncodedQuery,UrlEncodedBody};
 
 use persistent::Read;
 use persistent::Write;
@@ -89,14 +89,15 @@ fn check_auth(request: &mut Request) -> IronResult<Response> {
 }
 
 fn login_page(request: &mut Request) -> IronResult<Response> {
-    let params = request.get_ref::<Params>().unwrap();
-    let error = params.find(&["error"]);
-    let error = non_empty_string(error);
+    let params = request.get_ref::<UrlEncodedQuery>();
 
-    let mut errors: Vec<LoginError> = vec![];
-    if let Some(error) = error {
-        errors = LoginError::from_strings(vec![error]);
-    }
+    let errors = match params {
+        Ok(params) => match params.get("error") {
+            Some(values) => LoginError::from_strings(values),
+            None => vec![],
+        },
+        Err(_) => vec![],
+    };
 
     let i18n = i18n::I18n::new("en");
     let data = i18n.get_catalog(errors);
@@ -115,9 +116,18 @@ fn redirect(context: &Request, path: &str) -> Response {
     Response::with((iron::status::Found, Redirect(absolute_from_relative(&context.url, path))))
 }
 
-fn non_empty_string<'a>(value: Option<&'a Value>) -> Option<&'a String> {
-    match value {
-        Some(&Value::String(ref contents)) if !contents.is_empty() => Some(contents),
+fn non_empty_string(value: String) -> Option<String> {
+    if value.is_empty() {
+        None
+    }
+    else {
+        Some(value)
+    }
+}
+
+fn one_or_none(value: &Vec<String>) -> Option<String> {
+    match value.len() {
+        1 => Some(value.first().unwrap().clone()),
         _ => None,
     }
 }
@@ -127,14 +137,11 @@ fn redirect_with_errors(request: &mut Request, errors: Vec<LoginError>) -> IronR
 }
 
 fn process_login(request: &mut Request) -> IronResult<Response> {
+    let params = request.get::<UrlEncodedBody>().unwrap();
     let arc = request.get::<Read<Users>>().unwrap();
-    let params = request.get::<Params>().unwrap();
 
-    let username = params.find(&["username"]);
-    let password = params.find(&["password"]);
-
-    let username = non_empty_string(username);
-    let password = non_empty_string(password);
+    let username = params.get("username").and_then(one_or_none).and_then(non_empty_string);
+    let password = params.get("password").and_then(one_or_none).and_then(non_empty_string);
 
     match (username, password) {
         (None, None) => {
@@ -147,7 +154,7 @@ fn process_login(request: &mut Request) -> IronResult<Response> {
         (Some(username), Some(password)) => {
             let users = arc.as_ref();
 
-            match users.login(username, password) {
+            match users.login(&username, &password) {
                 LoginResult::UserNotFound => {
                     return redirect_with_errors(request, vec![LoginError::UsernameNotFound])
                 }

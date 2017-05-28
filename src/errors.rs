@@ -22,7 +22,7 @@ impl fmt::Display for LoginError {
 }
 
 impl LoginError {
-    pub fn from_strings(errors: Vec<&str>) -> Vec<LoginError> {
+    pub fn from_strings(errors: &Vec<String>) -> Vec<LoginError> {
         errors.iter().filter_map(|e| LoginError::from_string(e)).collect()
     }
 

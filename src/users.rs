@@ -32,15 +32,17 @@ impl Users {
         let mut contents = String::new();
         file.read_to_string(&mut contents).unwrap();
         let users_table = contents.parse::<Value>().unwrap();
-        let users = users_table.as_table().unwrap().iter().map(|(username, password)| {
-            User {
-                username: username.clone(),
-                password: String::from(password.as_str().unwrap()),
-            }
-        }).collect::<Vec<User>>();
-        Users {
-            users: users,
-        }
+        let users = users_table.as_table()
+            .unwrap()
+            .iter()
+            .map(|(username, password)| {
+                User {
+                    username: username.clone(),
+                    password: String::from(password.as_str().unwrap()),
+                }
+            })
+            .collect::<Vec<User>>();
+        Users { users: users }
     }
 
     pub fn login(&self, username: &str, password: &str) -> LoginResult {

@@ -4,8 +4,6 @@ extern crate handlebars_iron;
 extern crate urlencoded;
 extern crate persistent;
 extern crate cookie;
-extern crate hyperlocal;
-extern crate hyper;
 extern crate staticfile;
 extern crate mount;
 extern crate url;
@@ -40,6 +38,7 @@ mod sessions;
 mod config;
 mod i18n;
 mod errors;
+mod listener;
 
 use users::Users;
 use users::LoginResult;
@@ -47,14 +46,7 @@ use users::LoginResult;
 use cookie::Cookie;
 
 use sessions::Sessions;
-use hyperlocal::UnixSocketListener;
 use config::Config;
-use std::net::TcpListener;
-use hyper::net::HttpListener;
-use iron::Protocol;
-
-use std::fs::Permissions;
-use std::os::unix::fs::PermissionsExt;
 
 use staticfile::Static;
 use mount::Mount;
@@ -63,6 +55,8 @@ use iron::Url;
 use url::Url as RawUrl;
 
 use errors::LoginError;
+
+use listener::Listener;
 
 fn check_auth(request: &mut Request) -> IronResult<Response> {
     let sessions_mutex = request.get::<Write<Sessions>>().unwrap();
@@ -179,39 +173,9 @@ fn process_login(request: &mut Request) -> IronResult<Response> {
     };
 }
 
-enum Listener {
-    UnixSocket(UnixSocketListener),
-    Tcp(TcpListener),
-}
-
-fn setup_listener(config: Config) -> Listener {
-    let path = &config.listen;
-
-    if path.starts_with("/") {
-        if let Err(e) = std::fs::remove_file(path) {
-            if e.kind() != std::io::ErrorKind::NotFound {
-                panic!("Error unlinking Unix socket {}: {}", path, e);
-            }
-        }
-
-        let l = Listener::UnixSocket(UnixSocketListener::new(path).unwrap());
-
-        if let Some(socket_mode) = config.socket_mode {
-            let permissions = Permissions::from_mode(socket_mode);
-            std::fs::set_permissions(path, permissions).unwrap();
-            println!("Listening on Unix socket {}", path);
-        }
-        l
-    } else {
-        let l = Listener::Tcp(TcpListener::bind(path).unwrap());
-        println!("Listening on {}", path);
-        l
-    }
-}
-
 fn main() {
     let config = Config::from_file("config.toml");
-    let listener = setup_listener(config);
+    let listener = Listener::setup(config);
     let users = Users::from_file("users.toml");
     let sessions = Sessions::new().unwrap();
 
@@ -238,9 +202,6 @@ fn main() {
     chain.link_after(hbse);
 
     let iron = Iron::new(chain);
-    let iron = match listener {
-        Listener::UnixSocket(listener) => iron.listen(listener, Protocol::http()),
-        Listener::Tcp(listener) => iron.listen(HttpListener::from(listener), Protocol::http()),
-    };
+    let iron = listener.listen_for(iron);
     iron.unwrap();
 }

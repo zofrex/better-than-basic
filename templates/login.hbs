@@ -1,38 +1,35 @@
 <!doctype html>
 
 <html lang="{{i18n.locale}}">
-<head>
-  <title>Login</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <head>
+        <title>{{i18n.login_title}}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="static/styles.css">
+    </head>
 
-  <link rel="stylesheet" href="static/base-min.css">
-  <link rel="stylesheet" href="static/buttons-min.css">
-  <link rel="stylesheet" href="static/forms-min.css">
-</head>
+    <body>
+        <main>
+            <h1>{{i18n.login_title}}</h1>
+            <p>{{i18n.login_subtitle}}</p>
 
-<body>
-    {{error}}
-    <h1>{{i18n.login_title}}</h1>
-    <p>{{i18n.login_subtitle}}</p>
-    <form action="login" method="post" class="pure-form pure-form-aligned">
-        <div class="pure-control-group">
-            <label for="username">{{i18n.username_label}}</label>
-            <input id="username" type="text" name="username" placeholder="{{i18n.username_placeholder}}">
-            {{#if errors.username}}
-                <div class="pure-form-message-inline">{{errors.username}}</div>
-            {{/if}}
-        </div>
-        <div class="pure-control-group">
-            <label for="password">{{i18n.password_label}}</label>
-            <input id="password" type="password" name="password" placeholder="{{i18n.password_placeholder}}">
-            {{#if errors.password}}
-                <div class="pure-form-message-inline">{{errors.password}}</div>
-            {{/if}}
-        </div>
-        <div class="pure-controls">
-            <button type="submit" class="pure-button pure-button-primary">{{i18n.login_button}}</button>
-        </div>
-    </form>
-</body>
+            <form action="login" method="post">
+                <label for="username">{{i18n.username_label}}</label>
+                <div class="input-wrapper">
+                    <input id="username" type="text" name="username" placeholder="{{i18n.username_placeholder}}">
+                </div>
+                {{#if errors.username}}
+                    <div>{{errors.username}}</div>
+                {{/if}}
+                <label for="password">{{i18n.password_label}}</label>
+                <div class="input-wrapper">
+                    <input id="password" type="password" name="password" placeholder="{{i18n.password_placeholder}}">
+                </div>
+                {{#if errors.password}}
+                    <div>{{errors.password}}</div>
+                {{/if}}
+                <button type="submit">{{i18n.login_button}}</button>
+            </form>
+        </main>
+    </body>
 </html>

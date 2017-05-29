@@ -29,7 +29,7 @@ use handlebars_iron::HandlebarsEngine;
 use handlebars_iron::DirectorySource;
 use handlebars_iron::Template;
 
-use urlencoded::{UrlEncodedQuery,UrlEncodedBody};
+use urlencoded::{UrlEncodedQuery, UrlEncodedBody};
 
 use persistent::Read;
 use persistent::Write;
@@ -93,7 +93,7 @@ fn login_page(request: &mut Request) -> IronResult<Response> {
 
     let errors = params.get("error").map_or(vec![], LoginError::from_strings);
 
-    let mut form_values: BTreeMap<&str,String> = BTreeMap::new();
+    let mut form_values: BTreeMap<&str, String> = BTreeMap::new();
     if let Some(redirect) = params.get("return").and_then(one_or_none).and_then(non_empty_string) {
         form_values.insert("return", redirect);
     }
@@ -125,12 +125,7 @@ fn redirect(context: &Request, path: &str) -> Response {
 }
 
 fn non_empty_string(value: String) -> Option<String> {
-    if value.is_empty() {
-        None
-    }
-    else {
-        Some(value)
-    }
+    if value.is_empty() { None } else { Some(value) }
 }
 
 fn one_or_none(value: &Vec<String>) -> Option<String> {
@@ -140,7 +135,10 @@ fn one_or_none(value: &Vec<String>) -> Option<String> {
     }
 }
 
-fn redirect_with_errors(request: &mut Request, errors: Vec<LoginError>, return_url: Option<String>) -> IronResult<Response> {
+fn redirect_with_errors(request: &mut Request,
+                        errors: Vec<LoginError>,
+                        return_url: Option<String>)
+                        -> IronResult<Response> {
     let mut path = format!("/?{}", LoginError::to_query(errors));
     if let Some(return_url) = return_url {
         path = format!("{}&return={}", path, return_url);
@@ -160,19 +158,28 @@ fn process_login(request: &mut Request) -> IronResult<Response> {
         (None, None) => {
             return redirect_with_errors(request,
                                         vec![LoginError::UsernameMissing,
-                                             LoginError::PasswordMissing], redirect)
+                                             LoginError::PasswordMissing],
+                                        redirect)
         }
-        (None, _) => return redirect_with_errors(request, vec![LoginError::UsernameMissing], redirect),
-        (Some(_), None) => return redirect_with_errors(request, vec![LoginError::PasswordMissing], redirect),
+        (None, _) => {
+            return redirect_with_errors(request, vec![LoginError::UsernameMissing], redirect)
+        }
+        (Some(_), None) => {
+            return redirect_with_errors(request, vec![LoginError::PasswordMissing], redirect)
+        }
         (Some(username), Some(password)) => {
             let users = arc.as_ref();
 
             match users.login(&username, &password) {
                 LoginResult::UserNotFound => {
-                    return redirect_with_errors(request, vec![LoginError::UsernameNotFound], redirect)
+                    return redirect_with_errors(request,
+                                                vec![LoginError::UsernameNotFound],
+                                                redirect)
                 }
                 LoginResult::WrongPassword => {
-                    return redirect_with_errors(request, vec![LoginError::PasswordIncorrect], redirect)
+                    return redirect_with_errors(request,
+                                                vec![LoginError::PasswordIncorrect],
+                                                redirect)
                 }
                 LoginResult::Correct => {
                     let sessions_mutex = request.get::<Write<Sessions>>().unwrap();
@@ -183,8 +190,17 @@ fn process_login(request: &mut Request) -> IronResult<Response> {
                         .finish()
                         .to_string();
                     return match redirect {
-                        Some(redirect) => Ok(Response::with((iron::status::Found, RedirectRaw(redirect), Header(SetCookie(vec![cookie]))))),
-                        None => Ok(Response::with((iron::status::Found, Redirect(absolute_from_relative(&request.url, "/success")), Header(SetCookie(vec![cookie]))))),
+                        Some(redirect) => {
+                            Ok(Response::with((iron::status::Found,
+                                               RedirectRaw(redirect),
+                                               Header(SetCookie(vec![cookie])))))
+                        }
+                        None => {
+                            Ok(Response::with((iron::status::Found,
+                                               Redirect(absolute_from_relative(&request.url,
+                                                                               "/success")),
+                                               Header(SetCookie(vec![cookie])))))
+                        }
                     };
                 }
             }

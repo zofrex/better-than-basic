@@ -45,7 +45,10 @@ impl I18n {
         }
     }
 
-    pub fn get_catalog(&self, errors: Vec<LoginError>, form_data: BTreeMap<&'static str, String>) -> PageData {
+    pub fn get_catalog(&self,
+                       errors: Vec<LoginError>,
+                       form_data: BTreeMap<&'static str, String>)
+                       -> PageData {
         let error_messages = errors.into_iter()
             .map(|e| (e.get_field(), *self.errors.get(&e).unwrap()))
             .collect();

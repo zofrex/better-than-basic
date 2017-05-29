@@ -15,15 +15,19 @@
 
             <form action="login" method="post">
                 <label for="username">{{i18n.username_label}}</label>
-                <div class="input-wrapper">
-                    <input id="username" type="text" name="username" placeholder="{{i18n.username_placeholder}}">
+                <div class="input-wrapper-outer">
+                    <div class="input-wrapper-inner">
+                        <input id="username" type="text" name="username" placeholder="{{i18n.username_placeholder}}">
+                    </div>
                 </div>
                 {{#if errors.username}}
                     <div>{{errors.username}}</div>
                 {{/if}}
                 <label for="password">{{i18n.password_label}}</label>
-                <div class="input-wrapper">
-                    <input id="password" type="password" name="password" placeholder="{{i18n.password_placeholder}}">
+                <div class="input-wrapper-outer">
+                    <div class="input-wrapper-inner">
+                        <input id="password" type="password" name="password" placeholder="{{i18n.password_placeholder}}">
+                    </div>
                 </div>
                 {{#if errors.password}}
                     <div>{{errors.password}}</div>

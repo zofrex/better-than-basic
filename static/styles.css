@@ -25,22 +25,29 @@ label {
     height: 1.5em;
 }
 
-/* exists to allow for width: 100% on inputs */
-.input-wrapper {
-    padding: 0 1.5em 0 0;
+/* Subtract the 0.625em padding so input can be width 100% */
+.input-wrapper-outer {
+    padding: 0 1.25em 0 0; /* 2x input padding */
+}
+
+/* account for 2px border to align input vertically and horizontally */
+.input-wrapper-inner {
+    padding: 0 4px 0 0; /* 2x border */
+    margin: -2px 0; /* -border */
 }
 
 input {
     font-size: 1em;
     height: 1.5em;
-    margin: 12px 0; /* 0.75em - 2px */
-    padding: 10px;
+    padding: 0.625em;
+    margin: 0.875em 0;
     width: 100%;
+    border-width: 2px;
 }
 
 button {
     font-size: 1em;
-    padding: 10px;
+    padding: 0.625em;
     height: 3em;
     width: 100%;
     margin: 2.25em 0;

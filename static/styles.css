@@ -25,22 +25,12 @@ label {
     height: 1.5em;
 }
 
-/* Subtract the 0.625em padding so input can be width 100% */
-.input-wrapper-outer {
-    padding: 0 1.25em 0 0; /* 2x input padding */
-}
-
-/* account for 2px border to align input vertically and horizontally */
-.input-wrapper-inner {
-    padding: 0 4px 0 0; /* 2x border */
-    margin: -2px 0; /* -border */
-}
-
 input {
+    box-sizing: border-box;
     font-size: 1em;
-    height: 1.5em;
-    padding: 0.625em;
-    margin: 0.875em 0;
+    height: 3em;
+    padding: 0 0.625em;
+    margin: 0.75em 0;
     width: 100%;
     border-width: 2px;
 }

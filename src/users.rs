@@ -1,11 +1,15 @@
 extern crate iron;
 extern crate toml;
+extern crate bcrypt;
+
 use iron::typemap::Key;
 
 use std::io::prelude::*;
 use std::fs::File;
 use std::path::Path;
 use self::toml::value::Value;
+
+use self::bcrypt::verify;
 
 struct User {
     username: String,
@@ -48,8 +52,10 @@ impl Users {
     pub fn login(&self, username: &str, password: &str) -> LoginResult {
         match self.users.iter().find(|user| user.username == username) {
             None => LoginResult::UserNotFound,
-            Some(user) if user.password == password => LoginResult::Correct,
-            Some(_) => LoginResult::WrongPassword,
+            Some(user) => match verify(password, &user.password) {
+                Ok(valid) if valid => LoginResult::Correct,
+                _ => LoginResult::WrongPassword,
+            }
         }
     }
 }

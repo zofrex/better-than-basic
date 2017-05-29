@@ -24,6 +24,9 @@
                 {{#if errors.password}}
                     <div>{{errors.password}}</div>
                 {{/if}}
+                {{#if form_data.return}}
+                    <input type="hidden" name="return" value="{{form_data.return}}">
+                {{/if}}
                 <button type="submit">{{i18n.login_button}}</button>
             </form>
         </main>

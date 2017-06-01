@@ -1,14 +1,32 @@
-- hosts: all
-
-  become: yes
+- hosts: building
 
   tasks:
     - name: install Rust
       shell: curl https://sh.rustup.rs -sSf | sh -s -- -y
       args:
         creates: /home/vagrant/.cargo/bin/rustc
-      become: no
 
+    - name: compile
+      shell: . ~/.profile && cargo build --release
+      args:
+        chdir: /vagrant
+
+    - name: strip binary
+      shell: strip /vagrant/target/release/better-than-basic
+
+    - name: grab binary
+      fetch:
+        src: /vagrant/target/release/better-than-basic
+        dest: builds/
+
+    - name: build .deb
+      local_action: command fpm --log info --verbose -t deb -s dir -p builds/better-than-basic_VERSION_ARCH.deb -n better-than-basic -v 0.1.1 --directories /etc/better-than-basic --directories /usr/share/better-than-basic -a x86_64 -m "James Sanderson <zofrex@gmail.com>" --deb-systemd ../../better-than-basic.service ../../config.toml=/etc/better-than-basic/config.toml ../../users.toml=/etc/better-than-basic/users.toml builds/building/vagrant/target/release/better-than-basic=/usr/sbin/better-than-basic ../../static=/usr/share/better-than-basic ../../templates=/usr/share/better-than-basic
+
+- hosts: testing
+
+  become: yes
+
+  tasks:
     - name: install nginx
       package:
         name: nginx
@@ -30,6 +48,23 @@
       copy:
         src: private
         dest: /var/www/html
+
+    - name: upload .deb
+      copy:
+        src: builds/better-than-basic_0.1.1_amd64.deb
+        dest: /root/
+
+    - name: uninstall old better-than-basic
+      package:
+        name: better-than-basic
+        state: absent
+
+    - name: install better-than-basic
+      package:
+        deb: /root/better-than-basic_0.1.1_amd64.deb
+
+    - name: check better-than-basic is running
+      command: service better-than-basic status
 
   handlers:
     - name: reload nginx

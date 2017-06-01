@@ -4,9 +4,14 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder '.', disabled: true
   config.vm.synced_folder '../..', '/vagrant', type: 'rsync', rsync__exclude: ['target', 'testing']
 
-  config.vm.network "forwarded_port", guest: 2004, host: 2004
-
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "playbook.yml"
+  end
+
+  config.vm.define "building" do |building|
+  end
+
+  config.vm.define "testing" do |testing|
+    testing.vm.network "forwarded_port", guest: 2004, host: 2004
   end
 end

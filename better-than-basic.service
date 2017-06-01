@@ -1,0 +1,10 @@
+[Unit]
+Description=better-than-basic
+
+[Service]
+User=www-data
+Group=www-data
+ExecStart=/usr/sbin/better-than-basic
+
+[Install]
+WantedBy=multi-user.target

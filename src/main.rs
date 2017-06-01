@@ -209,13 +209,13 @@ fn process_login(request: &mut Request) -> IronResult<Response> {
 }
 
 fn main() {
-    let config = Config::from_file("config.toml");
+    let config = Config::from_file("/etc/better-than-basic/config.toml");
     let listener = Listener::setup(config);
-    let users = Users::from_file("users.toml");
+    let users = Users::from_file("/etc/better-than-basic/users.toml");
     let sessions = Sessions::new().unwrap();
 
     let mut hbse = HandlebarsEngine::new();
-    hbse.add(Box::new(DirectorySource::new("templates", ".hbs")));
+    hbse.add(Box::new(DirectorySource::new("/usr/share/better-than-basic/templates", ".hbs")));
 
     if let Err(r) = hbse.reload() {
         panic!("{}", r);
@@ -228,7 +228,7 @@ fn main() {
     router.get("/check", check_auth, "check_endpoint");
 
     let mut mount = Mount::new();
-    mount.mount("/static/", Static::new("static"));
+    mount.mount("/usr/share/better-than-basic/static/", Static::new("static"));
     mount.mount("/", router);
 
     let mut chain = Chain::new(mount);

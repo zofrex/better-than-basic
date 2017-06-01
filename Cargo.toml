@@ -21,3 +21,6 @@ staticfile = "*"
 mount = "*"
 url = "*"
 bcrypt = "*"
+
+[profile.release]
+lto = true

@@ -228,7 +228,7 @@ fn main() {
     router.get("/check", check_auth, "check_endpoint");
 
     let mut mount = Mount::new();
-    mount.mount("/usr/share/better-than-basic/static/", Static::new("static"));
+    mount.mount("/static/", Static::new("/usr/share/better-than-basic/static"));
     mount.mount("/", router);
 
     let mut chain = Chain::new(mount);

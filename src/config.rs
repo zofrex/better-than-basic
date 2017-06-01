@@ -17,9 +17,9 @@ struct ConfigFile {
 
 impl Config {
     pub fn from_file<P: AsRef<Path>>(path: P) -> Config {
-        let mut file = File::open(path).unwrap();
+        let mut file = File::open(path).expect("Opening config file");
         let mut contents = String::new();
-        file.read_to_string(&mut contents).unwrap();
+        file.read_to_string(&mut contents).expect("Reading config file");
         let config: ConfigFile = toml::from_str(&contents).unwrap();
         let socket_mode = config.socket_mode.map(|m| u32::from_str_radix(&m, 8).unwrap());
         Config {

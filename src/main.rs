@@ -218,7 +218,7 @@ fn main() {
     hbse.add(Box::new(DirectorySource::new("/usr/share/better-than-basic/templates", ".hbs")));
 
     if let Err(r) = hbse.reload() {
-        panic!("{}", r);
+        panic!("Error loading templates: {}", r);
     }
 
     let mut router = Router::new();

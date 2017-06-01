@@ -32,9 +32,9 @@ pub enum LoginResult {
 
 impl Users {
     pub fn from_file<P: AsRef<Path>>(path: P) -> Users {
-        let mut file = File::open(path).unwrap();
+        let mut file = File::open(path).expect("Opening users file");
         let mut contents = String::new();
-        file.read_to_string(&mut contents).unwrap();
+        file.read_to_string(&mut contents).expect("Reading users file");
         let users_table = contents.parse::<Value>().unwrap();
         let users = users_table.as_table()
             .unwrap()

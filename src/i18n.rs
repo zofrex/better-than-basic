@@ -34,6 +34,26 @@ impl I18n {
                 errors.insert(LoginError::PasswordMissing, "You must enter a password");
                 errors.insert(LoginError::PasswordIncorrect, "Incorrect password");
             }
+            "nl" => {
+            	strings.insert("locale", "nl");
+                
+                strings.insert("login_title", "Aanmelden");
+                strings.insert("login_subtitle", "U dient zich eerst aan te melden:");
+                strings.insert("username_label", "Gebruikersnaam:");
+                strings.insert("username_placeholder", "gebruikersnaam");
+                strings.insert("password_label", "Wachtwoord:");
+                strings.insert("password_placeholder", "wachtwoord");
+                strings.insert("login_button", "Aanmelden");
+
+                strings.insert("success_title", "Success!");
+                strings.insert("success_message", "U bent nu aangemeld.");
+
+                errors.insert(LoginError::UsernameMissing, "U dient een gebruikersnaam in te geven.");
+                errors.insert(LoginError::UsernameNotFound,
+                              "Geen gebruiker gevonden met deze gebruikersnaam");
+                errors.insert(LoginError::PasswordMissing, "U dient een wachtwoord in te geven");
+                errors.insert(LoginError::PasswordIncorrect, "Verkeerd wachtwoord");
+            }
             _ => {
                 panic!("Invalid locale");
             }

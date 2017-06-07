@@ -34,6 +34,26 @@ impl I18n {
                 errors.insert(LoginError::PasswordMissing, "You must enter a password");
                 errors.insert(LoginError::PasswordIncorrect, "Incorrect password");
             }
+            "fr" => {
+                strings.insert("locale", "fr");
+
+                strings.insert("login_title", "Identification");
+                strings.insert("login_subtitle", "Vous devez s'identifier pour utiliser cette page:");
+                strings.insert("username_label", "Nom d'utilisateur:");
+                strings.insert("username_placeholder", "nom d'utilisateur");
+                strings.insert("password_label", "Mot de passe:");
+                strings.insert("password_placeholder", "mot de passe");
+                strings.insert("login_button", "Identifier");
+
+                strings.insert("success_title", "Succès!");
+                strings.insert("success_message", "Votre compte a été validé.");
+
+                errors.insert(LoginError::UsernameMissing, "Vous devez entrer un nom d'utilisateur");
+                errors.insert(LoginError::UsernameNotFound,
+                              "Nom d'utilisateur ou mot de passe invalide.");
+                errors.insert(LoginError::PasswordMissing, "Vous devez entrer un mot de passe");
+                errors.insert(LoginError::PasswordIncorrect, "Nom d'utilisateur ou mot de passe invalide.");
+            }
             _ => {
                 panic!("Invalid locale");
             }

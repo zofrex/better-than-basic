@@ -50,9 +50,9 @@ impl I18n {
 
                 errors.insert(LoginError::UsernameMissing, "U dient een gebruikersnaam in te geven.");
                 errors.insert(LoginError::UsernameNotFound,
-                              "Geen gebruiker gevonden met deze gebruikersnaam");
+                              "Verkeerde gebruiker of verkeerd wachtwoord");
                 errors.insert(LoginError::PasswordMissing, "U dient een wachtwoord in te geven");
-                errors.insert(LoginError::PasswordIncorrect, "Verkeerd wachtwoord");
+                errors.insert(LoginError::PasswordIncorrect, "Verkeerde gebruiker of verkeerd wachtwoord");
             }
             _ => {
                 panic!("Invalid locale");

@@ -14,7 +14,7 @@
         state: started
 
     - name: copy nginx configuration
-      copy:
+      template:
         src: default-nginx.conf
         dest: /etc/nginx/sites-available/default
       notify:
@@ -36,6 +36,42 @@
       shell: curl https://sh.rustup.rs -sSf | sh -s -- -y
       args:
         creates: /home/vagrant/.cargo/bin/rustc
+
+    - name: create config dir
+      file:
+        path: /etc/better-than-basic
+        state: directory
+      become: true
+
+    - name: upload config file
+      copy:
+        src: ../../config.toml
+        dest: /etc/better-than-basic/config.toml
+      become: true
+
+    - name: upload users file
+      copy:
+        src: ../../users-mine.toml
+        dest: /etc/better-than-basic/users.toml
+      become: true
+
+    - name: create shared dir
+      file:
+        path: /usr/share/better-than-basic
+        state: directory
+      become: true
+
+    - name: upload template files
+      copy:
+        src: ../../templates
+        dest: /usr/share/better-than-basic
+      become: true
+
+    - name: upload static files
+      copy:
+        src: ../../static
+        dest: /usr/share/better-than-basic
+      become: true
 
     - name: compile
       shell: . ~/.profile && cargo build --release

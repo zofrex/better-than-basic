@@ -6,9 +6,14 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "playbook.yml"
+    ansible.host_vars = {
+      "building" => {"nginx_port" => 2003 },
+      "testing" => {"nginx_port" => 2004 }
+    }
   end
 
   config.vm.define "building" do |building|
+    building.vm.network "forwarded_port", guest: 2003, host: 2003
   end
 
   config.vm.define "testing" do |testing|

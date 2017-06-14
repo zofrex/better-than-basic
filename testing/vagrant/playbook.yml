@@ -1,3 +1,34 @@
+- hosts: all
+
+  become: true
+
+  tasks:
+    - name: install nginx
+      package:
+        name: nginx
+        state: latest
+
+    - name: start nginx
+      service:
+        name: nginx
+        state: started
+
+    - name: copy nginx configuration
+      copy:
+        src: default-nginx.conf
+        dest: /etc/nginx/sites-available/default
+      notify:
+        - reload nginx
+
+    - name: add private nginx dir
+      copy:
+        src: private
+        dest: /var/www/html
+
+  handlers:
+    - name: reload nginx
+      service: name=nginx state=reloaded
+
 - hosts: building
 
   tasks:
@@ -27,28 +58,6 @@
   become: yes
 
   tasks:
-    - name: install nginx
-      package:
-        name: nginx
-        state: latest
-
-    - name: start nginx
-      service:
-        name: nginx
-        state: started
-
-    - name: copy nginx configuration
-      copy:
-        src: default-nginx.conf
-        dest: /etc/nginx/sites-available/default
-      notify:
-        - reload nginx
-
-    - name: add private nginx dir
-      copy:
-        src: private
-        dest: /var/www/html
-
     - name: upload .deb
       copy:
         src: builds/better-than-basic_0.1.1_amd64.deb
@@ -65,7 +74,3 @@
 
     - name: check better-than-basic is running
       command: service better-than-basic status
-
-  handlers:
-    - name: reload nginx
-      service: name=nginx state=reloaded

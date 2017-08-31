@@ -1,4 +1,4 @@
-![](https://cdn.rawgit.com/zofrex/better-than-basic/master/experimental.svg)
+![](experimental.svg)
 
 This service is not ready for use yet. Please feel free to test it out in local sandboxed environments (e.g. a VM) but don't use it for anything live yet.
 

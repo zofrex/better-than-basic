@@ -18,5 +18,5 @@ RSpec.configure do |config|
 end
 
 Capybara.default_driver = :mechanize
-Capybara.app_host = "http://localhost:3000"
+Capybara.app_host = "http://nginx:8080"
 Capybara.app = Rack::Builder.new # Needed to make capybara-mechanize happy

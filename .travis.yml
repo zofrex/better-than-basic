@@ -1,0 +1,4 @@
+sudo: enabled
+
+script:
+  - docker-compose -f testing/integration/docker-compose.yml up tests

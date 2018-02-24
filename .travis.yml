@@ -1,4 +1,4 @@
 sudo: enabled
 
 script:
-  - docker-compose -f testing/integration/docker-compose.yml up tests
+  - docker-compose -f testing/integration/docker-compose.yml up --exit-code-from tests tests

@@ -1,4 +1,10 @@
 sudo: enabled
 
+# exclusions for Bors
+branches:
+  except:
+  - staging.tmp
+  - trying.tmp
+
 script:
   - docker-compose -f testing/integration/docker-compose.yml up --exit-code-from tests tests

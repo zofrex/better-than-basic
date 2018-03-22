@@ -1,0 +1,160 @@
+#!/bin/sh
+set -eu
+
+choose() {
+    case "$1" in
+        easy )
+            in_docker_compose
+            ;;
+        local )
+            locally
+            ;;
+        clean-up )
+            clean_up
+            ;;
+        * )
+            usage
+            ;;
+    esac
+}
+
+usage() {
+    echo "Usage: ./test test-mode"
+    echo "Valid modes:"
+    echo "  easy         Use docker-compose to run everything in containers - the application, nginx, and the test suite"
+    echo "  local        Use docker to run nginx in a container and run the application and test suite locally"
+    echo "               (Note: requires working Rust and Ruby toolchains locally)"
+    echo "  clean-up     Clean up after 'easy' and 'local' modes"
+}
+
+in_docker_compose() {
+    echo "Testing with everything in Docker-Compose"
+
+    # Stop the standalone nginx container (from 'local' run mode) if it's running, because it uses the same port
+    stop_nginx
+
+    # need `--build` so that the containers are rebuilt if their source changes
+    # need `--exit-code-from tests` so we get the return code from running rspec
+    # need `tests` at the end to only see the output from rspec (who cares about nginx logs)
+    # because the tests image depends on the others they will be spun up if not already
+    # NB: even though it says "WARNING: using --exit-code-from implies --abort-on-container-exit",
+    #     it doesn't stop the nginx or better-than-basic images once it's done (because just the "tests"
+    #     image is specified to run). This makes subsequent runs faster, but is also why the
+    #     clean-up job needs to exist.
+    docker-compose -f testing/integration/docker-compose.yml up --build --exit-code-from tests tests    
+}
+
+locally() {
+    echo "Testing locally (with nginx in Docker)"
+
+    # Stop the docker-compose nginx container if it's running, because we need the same port
+    stop_docker_compose_nginx
+
+    start_nginx
+    start_btb
+    # Potentially a race condition here; if better-than-basic doesn't start faster than rspec, tests will fail
+    run_tests
+
+    # Don't need to call stop_btb, it will run on exit anyway
+}
+
+# completely cleanup everything the docker-compose services create
+cleanup_docker_compose() {
+    if [ ! -z "$(docker-compose -f testing/integration/docker-compose.yml ps -q)" ]; then
+        echo "Cleaning up docker-compose:"
+        docker-compose -f testing/integration/docker-compose.yml down
+        echo "Stopped docker-compose containers"
+    fi
+}
+
+# stop just the nginx container from the docker-compose services
+# this is sufficient to free up the port for the nginx container for testing locally
+# and is a lot faster than taking down all the docker-compose services
+stop_docker_compose_nginx() {
+    # docker ps is much faster than docker-compose ps
+    if [ ! -z "$(docker ps --filter "name=integration_nginx_1" --quiet)" ]; then
+        echo "Stopping docker-compose's nginx..."
+        docker stop integration_nginx_1 > /dev/null
+        echo "Stopped nginx"
+    fi
+}
+
+start_nginx() {
+    if [ -z "$(docker ps --filter "name=some-nginx" --quiet)" ]; then # if container isn't running...
+        echo "Starting nginx..."
+        if [ ! -z "$(docker container ls --filter name=some-nginx --all -q)" ]; then
+            # If container is present but stopped, just start it
+            docker start some-nginx > /dev/null
+        else
+            # If container is not present at all, create and run it
+            docker run --name some-nginx -p 8080:8080 -d \
+                -v "$(pwd)/testing/integration/nginx/private":/usr/share/nginx/html/private:ro \
+                -v "$(pwd)/testing/integration/nginx/mac-host-nginx.conf":/etc/nginx/conf.d/default.conf:ro \
+                nginx > /dev/null
+        fi
+        echo "nginx is running..."
+    fi
+}
+
+cleanup_nginx() {    
+    if [ ! -z "$(docker container ls --filter name=some-nginx --all -q)" ]; then # if container exists...
+        echo "Cleaning up nginx container:"
+        # if container is running...
+        if [ ! -z "$(docker ps --filter "name=some-nginx" --quiet)" ]; then # if container is running...
+            docker stop some-nginx > /dev/null
+            echo "Stopped nginx"
+        fi
+
+        # We need to actually remove the container to fully clean up
+        docker rm some-nginx > /dev/null
+        echo "Removed nginx"
+    fi
+}
+
+stop_nginx() {
+    if [ ! -z "$(docker ps --filter "name=some-nginx" --quiet)" ]; then
+        echo "Stopping nginx container..."
+        docker stop some-nginx > /dev/null
+        echo "Stopped nginx"
+    fi
+}
+
+start_btb() {
+    # Compile (if necessary) in the foreground so we wait if it's necessary
+    # (using make instead of Cargo directly because it's *much* faster)
+    make -s
+
+    # Give a more comprehensible error if we run into this case
+    if pgrep -q better-than-basic; then
+        echo "ERROR: better-than-basic is already running, aborting"
+        # no definitely correct course of action from here, so let the user figure it out
+        exit 1
+    fi
+
+    # Run better-than-basic in the background
+    echo "Running better-than-basic..."
+    ./target/debug/better-than-basic &
+
+    # Make sure we clean this up whatever happens
+    trap stop_btb 0 HUP INT TERM
+
+    echo "better-than-basic is running..."
+}
+
+stop_btb() {
+    kill %1 || true
+    echo "Stopped better-than-basic"
+}
+
+run_tests() {
+    echo "Running tests..."
+    cd testing/integration
+    NGINX_HOST=localhost bundle exec rspec spec
+}
+
+clean_up() {
+    cleanup_docker_compose
+    cleanup_nginx
+}
+
+choose "${1-}"

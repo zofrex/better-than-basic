@@ -208,14 +208,33 @@ fn process_login(request: &mut Request) -> IronResult<Response> {
     };
 }
 
+#[cfg(debug_assertions)]
+const CONFIG_PATH: &'static str = "config-mine.toml";
+#[cfg(debug_assertions)]
+const USERS_PATH: &'static str = "users.toml";
+#[cfg(debug_assertions)]
+const TEMPLATES_PATH: &'static str = "templates";
+#[cfg(debug_assertions)]
+const STATIC_PATH: &'static str = "static";
+
+#[cfg(not(debug_assertions))]
+const CONFIG_PATH: &'static str = "/etc/better-than-basic/config.toml";
+#[cfg(not(debug_assertions))]
+const USERS_PATH: &'static str = "/etc/better-than-basic/users.toml";
+#[cfg(not(debug_assertions))]
+const TEMPLATES_PATH: &'static str = "/usr/share/better-than-basic/templates";
+#[cfg(not(debug_assertions))]
+const STATIC_PATH: &'static str = "/usr/share/better-than-basic/static";
+
+
 fn main() {
-    let config = Config::from_file("/etc/better-than-basic/config.toml");
+    let config = Config::from_file(CONFIG_PATH);
     let listener = Listener::setup(config);
-    let users = Users::from_file("/etc/better-than-basic/users.toml");
+    let users = Users::from_file(USERS_PATH);
     let sessions = Sessions::new().unwrap();
 
     let mut hbse = HandlebarsEngine::new();
-    hbse.add(Box::new(DirectorySource::new("/usr/share/better-than-basic/templates", ".hbs")));
+    hbse.add(Box::new(DirectorySource::new(TEMPLATES_PATH, ".hbs")));
 
     if let Err(r) = hbse.reload() {
         panic!("Error loading templates: {}", r);
@@ -228,7 +247,7 @@ fn main() {
     router.get("/check", check_auth, "check_endpoint");
 
     let mut mount = Mount::new();
-    mount.mount("/static/", Static::new("/usr/share/better-than-basic/static"));
+    mount.mount("/static/", Static::new(STATIC_PATH));
     mount.mount("/", router);
 
     let mut chain = Chain::new(mount);

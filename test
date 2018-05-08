@@ -1,5 +1,5 @@
 #!/bin/sh
-set -eu
+set -eum
 
 choose() {
     case "$1" in
@@ -87,9 +87,17 @@ start_nginx() {
             docker start some-nginx > /dev/null
         else
             # If container is not present at all, create and run it
-            docker run --name some-nginx -p 8080:8080 -d \
+
+            # Need slightly different nginx config on Mac
+            if [ "$(uname)" = "Darwin" ]; then
+                local config="mac-host-nginx.conf"
+            else
+                local config="local-host-nginx.conf"
+            fi
+
+            docker run --name some-nginx -p 8080:8080 -d --net="host" \
                 -v "$(pwd)/testing/integration/nginx/private":/usr/share/nginx/html/private:ro \
-                -v "$(pwd)/testing/integration/nginx/mac-host-nginx.conf":/etc/nginx/conf.d/default.conf:ro \
+                -v "$(pwd)/testing/integration/nginx/$config":/etc/nginx/conf.d/default.conf:ro \
                 nginx > /dev/null
         fi
         echo "nginx is running..."
@@ -125,7 +133,7 @@ start_btb() {
     make -s
 
     # Give a more comprehensible error if we run into this case
-    if pgrep -q better-than-basic; then
+    if pidof better-than-basic > /dev/null; then
         echo "ERROR: better-than-basic is already running, aborting"
         # no definitely correct course of action from here, so let the user figure it out
         exit 1

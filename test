@@ -1,5 +1,5 @@
-#!/bin/sh
-set -eum
+#!/usr/bin/env bash
+set -eu
 
 choose() {
     case "$1" in
@@ -104,7 +104,7 @@ start_nginx() {
     fi
 }
 
-cleanup_nginx() {    
+cleanup_nginx() {
     if [ ! -z "$(docker container ls --filter name=some-nginx --all -q)" ]; then # if container exists...
         echo "Cleaning up nginx container:"
         # if container is running...
@@ -139,19 +139,45 @@ start_btb() {
         exit 1
     fi
 
+    # Make sure we clean the webserver up whatever happens
+    trap stop_children EXIT
+    trap 'exit 1' TERM INT
+
     # Run better-than-basic in the background
     echo "Running better-than-basic..."
     ./target/debug/better-than-basic &
+    btb_pid="$!"
 
-    # Make sure we clean this up whatever happens
-    trap stop_btb 0 HUP INT TERM
+    wait_for_btb_to_start
 
     echo "better-than-basic is running..."
 }
 
-stop_btb() {
-    kill %1 || true
-    echo "Stopped better-than-basic"
+wait_for_btb_to_start() {
+    # Start async timer
+    (sleep 1 && echo "ERROR Timed out waiting for better-than-basic to start" && kill $$)&
+    timer_pid="$!"
+
+    # Wait for better-than-basic to be ready to accept requests
+    while ! nc -z localhost 3000; do
+        true
+    done
+
+    # It's started, stop the timer!
+    kill "$timer_pid"
+    unset timer_pid
+}
+
+stop_children() {
+    # kill the timeout timer in case we are interrupted while that is going
+    [ ! -z "${timer_pid-}" ] && kill "1${timer_pid}" 2> /dev/null || true
+
+    # stop the webserver
+    if [ ! -z "${btb_pid-}" ] && kill "$btb_pid" 2> /dev/null; then
+        echo "Stopped better-than-basic"
+    else
+        echo "ERROR: Didn't stop better-than-basic - possibly failed to start?"
+    fi
 }
 
 run_tests() {

@@ -133,7 +133,8 @@ start_btb() {
     make -s
 
     # Give a more comprehensible error if we run into this case
-    if pidof better-than-basic > /dev/null; then
+    # (On Linux pgrep doesn't have -q or support process names > 15 chars without -f)
+    if pgrep -f better-than-basic$ > /dev/null; then
         echo "ERROR: better-than-basic is already running, aborting"
         # no definitely correct course of action from here, so let the user figure it out
         exit 1

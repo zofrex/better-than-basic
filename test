@@ -146,12 +146,12 @@ start_btb() {
 
     # Run better-than-basic in the background
     echo "Running better-than-basic..."
-    ./target/debug/better-than-basic &
+    ./target/debug/better-than-basic > /dev/null &
     btb_pid="$!"
 
     wait_for_btb_to_start
 
-    echo "better-than-basic is running..."
+    echo "better-than-basic is running"
 }
 
 wait_for_btb_to_start() {
@@ -160,7 +160,7 @@ wait_for_btb_to_start() {
     timer_pid="$!"
 
     # Wait for better-than-basic to be ready to accept requests
-    while ! nc -z localhost 3000; do
+    while ! nc -z localhost 3000 2> /dev/null; do
         true
     done
 

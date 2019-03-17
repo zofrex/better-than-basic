@@ -1,5 +1,4 @@
-build-docker:
-	docker build . -t my-rust
+SRC_FILES = $(shell find src -name '*.rs')
 
-run-docker:
-	docker run -it -p 3000:3000 my-rust
+target/debug/better-than-basic: $(SRC_FILES) Cargo.toml Cargo.lock
+	cargo build

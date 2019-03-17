@@ -7,4 +7,4 @@ branches:
   - trying.tmp
 
 script:
-  - docker-compose -f testing/integration/docker-compose.yml up --exit-code-from tests tests
+  - ./test easy

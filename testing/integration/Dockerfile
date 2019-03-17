@@ -1,4 +1,6 @@
-FROM ruby:2.5.0
+FROM ruby:2.6.0
+
+RUN gem install bundler
 
 WORKDIR /ruby
 COPY Gemfile* ./

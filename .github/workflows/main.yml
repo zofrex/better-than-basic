@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  push:
+    branches: [ release-candidate ]
+
+jobs:
+  mirror-to-master:
+    runs-on: ubuntu-latest
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+    # Point master branch at the same commit release-candidate is pointed to
+    - name: update master branch locally
+      run: git branch -f master release-candidate
+    - name: push update back to Github
+      run: git push --force "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" master:master
